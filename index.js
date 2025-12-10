@@ -1,44 +1,40 @@
+// =========================
+//  EXPRESS SERVER
+// =========================
 const express = require("express");
 const app = express();
-app.use(express.json()); // fontos, hogy tudja olvasni a JSON body-t
+app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
+app.get("/", (req, res) => res.send("Bot online"));
+
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Webserver running on port ${PORT}`));
 
+
+// =========================
+//  DISCORD BOT
+// =========================
 const { Client, GatewayIntentBits } = require("discord.js");
-const client = new Client({ 
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
-    ] 
+
+const client = new Client({
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
 });
 
-// Bot ready esemény
-client.on("clientReady", () => {
+// IDE ÍRD A DISCORD CSATORNA ID-JÁT AHOVA KÜLDJE
+const CHANNEL_ID = "IDE ÍRD A SAJÁT DISCORD CSATORNA ID-T";
+
+client.once("ready", () => {
     console.log(`Bot bejelentkezett: ${client.user.tag}`);
 });
 
-// Teszt: Discord üzenetek figyelése
-client.on("messageCreate", message => {
-    if(message.author.bot) return;
 
-    if(message.content.toLowerCase().includes("támadás")) {
-        message.channel.send("⚠️ Figyelem! Támadás történt!");
-    }
-});
+// =========================
+//  /ATTACK VÉGPONT – TAMPERMONKEY IDE KÜLD
+// =========================
+app.post("/attack", async (req, res) => {
+    const { attacker, alliance, target, arrival } = req.body;
 
-// Új webhook végpont külső eseményekhez
-// Pl. a játék szerver POST-ol ide, ha támadás történik
-app.post("/attack", (req, res) => {
-    // DISCORD_CHANNEL_ID helyére írd be a csatorna ID-ját
-    const channel = client.channels.cache.get("DISCORD_CHANNEL_ID");
-    if(channel) {
-        const attacker = req.body.attacker || "Ismeretlen";
-        const target = req.body.target || "Ismeretlen";
-        channel.send(`⚠️ Figyelem! Támadás történt!\nTámadó: ${attacker}\nCélpont: ${target}`);
-    }
-    res.sendStatus(200); // válasz a POST kérésre
-});
+    try {
+        // megnyitja a csatornát
+        const channel = await client.cha
 
-client.login(process.env.DISCORD_TOKEN);
