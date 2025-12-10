@@ -21,7 +21,7 @@ const client = new Client({
 });
 
 // IDE ÍRD A DISCORD CSATORNA ID-JÁT AHOVA KÜLDJE
-const CHANNEL_ID = "IDE ÍRD A SAJÁT DISCORD CSATORNA ID-T";
+const CHANNEL_ID = "1448331754359357652";
 
 client.once("ready", () => {
     console.log(`Bot bejelentkezett: ${client.user.tag}`);
