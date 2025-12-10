@@ -1,7 +1,6 @@
 const express = require("express");
 const app = express();
-
-app.get("/", (req, res) => res.send("Bot online"));
+app.use(express.json()); // fontos, hogy tudja olvasni a JSON body-t
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Webserver running on port ${PORT}`));
@@ -15,20 +14,31 @@ const client = new Client({
     ] 
 });
 
-// ready esemény
+// Bot ready esemény
 client.on("clientReady", () => {
     console.log(`Bot bejelentkezett: ${client.user.tag}`);
 });
 
-// példa: figyelés üzenetekre
+// Teszt: Discord üzenetek figyelése
 client.on("messageCreate", message => {
-    // bot saját üzenetét ne figyeljük
     if(message.author.bot) return;
 
-    // példa figyelés: ha valaki írja, hogy "támadás"
     if(message.content.toLowerCase().includes("támadás")) {
         message.channel.send("⚠️ Figyelem! Támadás történt!");
     }
+});
+
+// Új webhook végpont külső eseményekhez
+// Pl. a játék szerver POST-ol ide, ha támadás történik
+app.post("/attack", (req, res) => {
+    // DISCORD_CHANNEL_ID helyére írd be a csatorna ID-ját
+    const channel = client.channels.cache.get("DISCORD_CHANNEL_ID");
+    if(channel) {
+        const attacker = req.body.attacker || "Ismeretlen";
+        const target = req.body.target || "Ismeretlen";
+        channel.send(`⚠️ Figyelem! Támadás történt!\nTámadó: ${attacker}\nCélpont: ${target}`);
+    }
+    res.sendStatus(200); // válasz a POST kérésre
 });
 
 client.login(process.env.DISCORD_TOKEN);
